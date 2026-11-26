@@ -6,6 +6,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 
+export const instant = false  // ← AJOUTE CETTE LIGNE
+
 /**
  * Shell statique (pré-rendu) + contenu dynamique (streamé).
  * Next.js 16 exige que cookies()/connection()/createClient(server)

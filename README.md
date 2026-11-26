@@ -72,6 +72,7 @@ zod	Validation des entrées (username, payloads)
 
 
 npm install -D vitest @vitejs/plugin-react jsdom @testing-library/react @testing-library/jest-dom msw
+npm install -D vitest @vitejs/plugin-react jsdom @testing-library/react @testing-library/jest-dom msw --legacy-peer-deps
 Dev dependencies :
 
 vitest : test runner rapide
@@ -86,3 +87,7 @@ jsdom : environnement DOM pour les tests
 
 msw : Mock Service Worker pour mocker GitHub API
 
+# 8nJDfwF&U9ut,Ys#
+
+vider le cache
+Remove-Item -Recurse -Force .next

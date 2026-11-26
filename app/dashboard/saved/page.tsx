@@ -10,6 +10,7 @@ interface SavedProfile {
   score: number
   created_at: string
 }
+export const instant = false  // ← AJOUTE CETTE LIGNE
 
 export default async function SavedProfilesPage() {
   const supabase = await createClient()

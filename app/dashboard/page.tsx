@@ -1,17 +1,31 @@
 // app/dashboard/page.tsx
 
+import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
-import { connection } from 'next/server'
 
 /**
- * Dashboard de l'utilisateur connecté.
- * Protégé par le middleware (redirige vers /login si non connecté).
+ * Shell statique (pré-rendu) + contenu dynamique (streamé).
+ * Next.js 16 exige que cookies()/connection()/createClient(server)
+ * soient DANS un <Suspense>.
  */
-export default async function DashboardPage() {
-  await connection() // force le rendu dynamique, autorise Date.now()
+export default function DashboardPage() {
+  return (
+    <main className="mx-auto max-w-4xl space-y-6 p-6">
+      <Suspense fallback={<DashboardSkeleton />}>
+        <DashboardContent />
+      </Suspense>
+    </main>
+  )
+}
+
+/**
+ * Tout l'accès dynamique (session, user) est ici.
+ * Ce composant est streamé au runtime, pas pré-rendu.
+ */
+async function DashboardContent() {
   const supabase = await createClient()
   const {
     data: { user },
@@ -25,7 +39,7 @@ export default async function DashboardPage() {
   const avatarUrl = user.user_metadata?.avatar_url as string | undefined
 
   return (
-    <main className="mx-auto max-w-4xl space-y-6 p-6">
+    <>
       <header className="flex items-center gap-4 rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
         {avatarUrl && (
           <Image
@@ -37,7 +51,9 @@ export default async function DashboardPage() {
           />
         )}
         <div>
-          <h1 className="text-2xl font-bold">Bonjour, {githubUsername ?? 'dev'}</h1>
+          <h1 className="text-2xl font-bold">
+            Bonjour, {githubUsername ?? 'dev'}
+          </h1>
           <p className="text-sm text-gray-500">{user.email}</p>
         </div>
       </header>
@@ -72,6 +88,22 @@ export default async function DashboardPage() {
           Se déconnecter
         </button>
       </form>
-    </main>
+    </>
+  )
+}
+
+/**
+ * Skeleton déterministe (pas de Date.now(), pas de Math.random()).
+ * Affiché pendant le streaming du contenu dynamique.
+ */
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="h-28 animate-pulse rounded-2xl bg-gray-100 dark:bg-gray-800" />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="h-32 animate-pulse rounded-2xl bg-gray-100 dark:bg-gray-800" />
+        <div className="h-32 animate-pulse rounded-2xl bg-gray-100 dark:bg-gray-800" />
+      </div>
+    </div>
   )
 }

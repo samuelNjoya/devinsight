@@ -27,12 +27,15 @@ export default function SavedProfilesPage() {
 }
 
 async function SavedProfilesContent() {
+ 
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   if (!user) redirect('/login')
+
+  const githubUsername = user.user_metadata?.user_name as string | undefined
 
   const { data: profiles, error } = await supabase
     .from('saved_profiles')
@@ -108,7 +111,8 @@ async function SavedProfilesContent() {
                       </div>
                     </div>
                     <ButtonLink
-                      href={`/dashboard/compare?a=${p.github_username}`}
+                      // href={`/dashboard/compare?a=${p.github_username}`}
+                      href={`/dashboard/compare?a=${p.github_username}&b=${githubUsername ?? 'octocat'}`}
                       variant="secondary"
                       size="sm"
                     >

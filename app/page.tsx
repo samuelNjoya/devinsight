@@ -17,7 +17,7 @@ export default function HomePage() {
       setError('Entre un username GitHub')
       return
     }
-    // Validation basique côté client, la vraie validation est serveur
+    // Validation basique côté client, la vraie validation est serveur 
     if (!/^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i.test(trimmed)) {
       setError('Username GitHub invalide')
       return

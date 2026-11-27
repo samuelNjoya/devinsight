@@ -7,10 +7,12 @@ import { useState } from 'react'
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false)
-  const supabase = createClient()
 
   async function signInWithGitHub() {
     setLoading(true)
+    // Instanciation AU MOMENT DU CLIC, pas au rendu du composant
+    const supabase = createClient()
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'github',
       options: {

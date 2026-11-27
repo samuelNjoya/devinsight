@@ -5,33 +5,56 @@ import { Redis } from '@upstash/redis'
 import { config } from '@/lib/config'
 
 /**
- * Rate limiting avec Upstash.
- * Deux limiteurs : anonyme (par IP) et authentifié (par user ID).
+ * Initialisation paresseuse : Redis et Ratelimit ne sont instanciés
+ * qu'au premier appel réel (runtime), pas au moment de l'import.
+ * Cela permet au build Next.js de passer même si les variables
+ * d'environnement Redis ne sont pas disponibles pendant la collecte
+ * des données (ce qui est le cas sur Vercel).
  */
-const redis = new Redis({
-  url: config.redis.url,
-  token: config.redis.token,
-})
 
-/**
- * Limiteur pour visiteurs non connectés : 20 req/min par IP.
- */
-export const anonymousLimiter = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(config.rateLimit.anonymousPerMinute, '1 m'),
-  analytics: true,
-  prefix: 'ratelimit:anon',
-})
+let redisInstance: Redis | null = null
+let anonymousLimiterInstance: Ratelimit | null = null
+let authenticatedLimiterInstance: Ratelimit | null = null
 
-/**
- * Limiteur pour utilisateurs connectés : 60 req/min par user ID.
- */
-export const authenticatedLimiter = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(config.rateLimit.authenticatedPerMinute, '1 m'),
-  analytics: true,
-  prefix: 'ratelimit:auth',
-})
+function getRedis(): Redis {
+  if (!redisInstance) {
+    redisInstance = new Redis({
+      url: config.redis.url,
+      token: config.redis.token,
+    })
+  }
+  return redisInstance
+}
+
+export function getAnonymousLimiter(): Ratelimit {
+  if (!anonymousLimiterInstance) {
+    anonymousLimiterInstance = new Ratelimit({
+      redis: getRedis(),
+      limiter: Ratelimit.slidingWindow(
+        config.rateLimit.anonymousPerMinute,
+        '1 m'
+      ),
+      analytics: true,
+      prefix: 'ratelimit:anon',
+    })
+  }
+  return anonymousLimiterInstance
+}
+
+export function getAuthenticatedLimiter(): Ratelimit {
+  if (!authenticatedLimiterInstance) {
+    authenticatedLimiterInstance = new Ratelimit({
+      redis: getRedis(),
+      limiter: Ratelimit.slidingWindow(
+        config.rateLimit.authenticatedPerMinute,
+        '1 m'
+      ),
+      analytics: true,
+      prefix: 'ratelimit:auth',
+    })
+  }
+  return authenticatedLimiterInstance
+}
 
 /**
  * Extrait l'IP réelle du client (derrière Vercel).

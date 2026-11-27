@@ -91,3 +91,21 @@ msw : Mock Service Worker pour mocker GitHub API
 
 vider le cache
 Remove-Item -Recurse -Force .next
+
+## les caracteristiques d'un bon code 
+Les bonnes pratiques qu'on applique (rappel)
+Catégorie	Règle
+Code	DRY, KISS, YAGNI, SRP, SoC, immutabilité (readonly), fonctions pures
+SOLID	Chaque composant fait une chose, interfaces petites, dépendances inversées
+Clean Code	Nommage explicite, fonctions courtes, pas de magic numbers, erreurs typées
+Clean Architecture	UI ≠ logique métier ≠ infrastructure. Les composants ne font aucun appel réseau
+Sécurité	Pas de secrets côté client, RLS, validation Zod, rate limiting
+Performance	Server Components par défaut, Client Components ciblés, dynamic import pour les libs lourdes, <Suspense> partout où il y a du dynamique
+Accessibilité	Sémantique HTML, ARIA, contraste WCAG AA, navigation clavier, prefers-reduced-motion
+Next.js 16	loading.tsx pour les segments dynamiques, instant = false si besoin, connection() avec parcimonie, pas de ssr: false dans les Server Components
+TypeScript	strict, noUncheckedIndexedAccess, exactOptionalPropertyTypes, types explicites
+Tests	Vitest pour les fonctions pures, Playwright pour les parcours critiques
+UX	Progressive disclosure, graceful degradation, skeletons déterministes, empty states, toasts
+Qualité	ESLint, Prettier, Husky, Conventional Commits
+
+npm install next-themes framer-motion

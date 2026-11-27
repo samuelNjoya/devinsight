@@ -1,34 +1,34 @@
-// components/DashboardSkeleton.tsx (ou directement dans le même fichier)
+// components/Dashboard/DashboardSkeleton.tsx
+
+import { Card, CardContent } from '@/components/ui/Card'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 export function DashboardSkeleton() {
   return (
-    <div className="space-y-6 animate-pulse" aria-busy="true" aria-label="Chargement du tableau de bord">
-      {/* En-tête : avatar + infos profil + badge score */}
-      <div className="flex flex-col justify-between gap-4 rounded-xl border border-gray-200 bg-white p-6 sm:flex-row sm:items-center dark:border-gray-800 dark:bg-gray-900">
-        <div className="flex items-center gap-4">
-          <div className="h-16 w-16 shrink-0 rounded-full bg-gray-200 dark:bg-gray-800" />
-          <div className="space-y-2">
-            <div className="h-5 w-44 rounded bg-gray-200 dark:bg-gray-800" />
-            <div className="h-4 w-64 rounded bg-gray-200 dark:bg-gray-800" />
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="flex justify-end">
+        <Skeleton className="h-10 w-32" />
+      </div>
+      <Card>
+        <CardContent className="flex flex-col gap-6 sm:flex-row sm:items-center">
+          <Skeleton className="h-24 w-24 rounded-full" />
+          <div className="flex-1 space-y-3">
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-96 max-w-full" />
+            <div className="flex gap-6">
+              <Skeleton className="h-10 w-16" />
+              <Skeleton className="h-10 w-16" />
+              <Skeleton className="h-10 w-16" />
+            </div>
           </div>
-        </div>
-        <div className="h-12 w-28 rounded-lg bg-gray-200 dark:bg-gray-800" />
+        </CardContent>
+      </Card>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card><CardContent><Skeleton className="h-64 w-full" /></CardContent></Card>
+        <Card><CardContent><Skeleton className="h-64 w-full" /></CardContent></Card>
       </div>
-
-      {/* Grille de cartes / critères */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div className="h-32 rounded-xl bg-gray-200 dark:bg-gray-800" />
-        <div className="h-32 rounded-xl bg-gray-200 dark:bg-gray-800" />
-        <div className="h-32 rounded-xl bg-gray-200 dark:bg-gray-800" />
-      </div>
-
-      {/* Bloc principal (détails / breakdown / liste) */}
-      <div className="space-y-3 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-        <div className="h-5 w-48 rounded bg-gray-200 dark:bg-gray-800" />
-        <div className="h-4 w-full rounded bg-gray-200 dark:bg-gray-800" />
-        <div className="h-4 w-5/6 rounded bg-gray-200 dark:bg-gray-800" />
-        <div className="h-4 w-2/3 rounded bg-gray-200 dark:bg-gray-800" />
-      </div>
+      <Card><CardContent><Skeleton className="h-32 w-full" /></CardContent></Card>
+      <Card><CardContent><Skeleton className="h-40 w-full" /></CardContent></Card>
     </div>
   )
 }

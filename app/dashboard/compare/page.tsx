@@ -10,8 +10,11 @@ import { getCache, cacheKeys } from '@/lib/cache/redis'
 import { validateUsername } from '@/lib/validation/username'
 import { config } from '@/lib/config'
 import { ComparisonRadarWrapper } from '@/components/Dashboard/ComparisonRadarWrapper'
-
-// ⚠️ SUPPRIMÉ : le dynamic import avec ssr: false (interdit en Server Component)
+import { Card, CardContent } from '@/components/ui/Card'
+import { FadeIn } from '@/components/ui/FadeIn'
+import { Skeleton } from '@/components/ui/Skeleton'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { ButtonLink } from '@/components/ui/Button'
 
 interface PageProps {
   searchParams: Promise<{ a?: string; b?: string }>
@@ -24,33 +27,20 @@ async function fetchProfileData(username: string) {
   const cache = getCache()
   const cacheKey = cacheKeys.profile(validation.value, false)
 
-  // return cache.getOrSet(cacheKey, config.github.cacheTtlSeconds, async () => {
-  //   const client = new GitHubClient()
-  //   const profile = await aggregateProfile(client, validation.value, {
-  //     includePrivate: false,
-  //   })
-  //   return { profile, score: calculateScore(profile) }
-  // })
-
   return cache.getOrSet(cacheKey, config.github.cacheTtlSeconds, async () => {
     const client = new GitHubClient()
     const profile = await aggregateProfile(client, validation.value, {
       includePrivate: false,
     })
-    // Horloge fixe = déterministe pour le prerender
-   // const score = calculateScore(profile, () => 0)
-    //return { profile, score }
-     return { profile, score: calculateScore(profile) }
+    return { profile, score: calculateScore(profile) }
   })
 }
 
 export default function ComparePage({ searchParams }: PageProps) {
   return (
-    <main className="mx-auto max-w-4xl space-y-6 p-6">
-      <Suspense fallback={<CompareSkeleton />}>
-        <CompareContent searchParams={searchParams} />
-      </Suspense>
-    </main>
+    <Suspense fallback={<CompareSkeleton />}>
+      <CompareContent searchParams={searchParams} />
+    </Suspense>
   )
 }
 
@@ -62,13 +52,25 @@ async function CompareContent({ searchParams }: PageProps) {
   if (!user) redirect('/login')
 
   const { a, b } = await searchParams
+
   if (!a || !b) {
     return (
-      <div>
-        <h1 className="text-2xl font-bold">Comparer deux profils</h1>
-        <p className="mt-4 text-gray-500">
-          Ajoute <code>?a=username1&amp;b=username2</code> à l&apos;URL.
-        </p>
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+        <Card>
+          <CardContent>
+            <EmptyState
+              icon={
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <circle cx="9" cy="9" r="3" />
+                  <circle cx="15" cy="15" r="3" />
+                </svg>
+              }
+              title="Comparer deux profils"
+              description="Ajoute ?a=username1&b=username2 à l'URL, ou clique sur « Comparer » depuis tes profils sauvegardés."
+              action={<ButtonLink href="/dashboard/saved">Voir mes profils sauvegardés</ButtonLink>}
+            />
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -79,47 +81,75 @@ async function CompareContent({ searchParams }: PageProps) {
   ])
 
   if (!dataA || !dataB) {
-    return <p className="text-red-600">Un des profils est invalide ou introuvable.</p>
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+        <p className="text-red-600">
+          Un des profils est invalide ou introuvable.
+        </p>
+      </div>
+    )
   }
 
   return (
-    <>
-      <h1 className="text-2xl font-bold">
-        @{dataA.profile.user.login} vs @{dataB.profile.user.login}
-      </h1>
+    <div className="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+      <FadeIn>
+        <h1 className="text-2xl font-bold tracking-tight">
+          @{dataA.profile.user.login} vs @{dataB.profile.user.login}
+        </h1>
+      </FadeIn>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-xl border border-gray-200 bg-white p-4 text-center dark:border-gray-800 dark:bg-gray-900">
-          <p className="text-sm text-gray-500">@{dataA.profile.user.login}</p>
-          <p className="text-3xl font-bold">{dataA.score.total}</p>
-        </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-4 text-center dark:border-gray-800 dark:bg-gray-900">
-          <p className="text-sm text-gray-500">@{dataB.profile.user.login}</p>
-          <p className="text-3xl font-bold">{dataB.score.total}</p>
-        </div>
+        <FadeIn delay={0.1}>
+          <Card>
+            <CardContent className="text-center">
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                @{dataA.profile.user.login}
+              </p>
+              <p className="mt-2 text-4xl font-bold tabular-nums">
+                {dataA.score.total}
+              </p>
+            </CardContent>
+          </Card>
+        </FadeIn>
+        <FadeIn delay={0.15}>
+          <Card>
+            <CardContent className="text-center">
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                @{dataB.profile.user.login}
+              </p>
+              <p className="mt-2 text-4xl font-bold tabular-nums">
+                {dataB.score.total}
+              </p>
+            </CardContent>
+          </Card>
+        </FadeIn>
       </div>
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-        <ComparisonRadarWrapper
-          scores={[
-            { label: dataA.profile.user.login, score: dataA.score },
-            { label: dataB.profile.user.login, score: dataB.score },
-          ]}
-        />
-      </div>
-    </>
+      <FadeIn delay={0.2}>
+        <Card>
+          <CardContent>
+            <ComparisonRadarWrapper
+              scores={[
+                { label: dataA.profile.user.login, score: dataA.score },
+                { label: dataB.profile.user.login, score: dataB.score },
+              ]}
+            />
+          </CardContent>
+        </Card>
+      </FadeIn>
+    </div>
   )
 }
 
 function CompareSkeleton() {
   return (
-    <div className="space-y-6">
-      <div className="h-8 w-80 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
+    <div className="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+      <Skeleton className="h-8 w-80" />
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="h-24 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800" />
-        <div className="h-24 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800" />
+        <Card><CardContent><Skeleton className="h-20 w-full" /></CardContent></Card>
+        <Card><CardContent><Skeleton className="h-20 w-full" /></CardContent></Card>
       </div>
-      <div className="h-80 animate-pulse rounded-2xl bg-gray-100 dark:bg-gray-800" />
+      <Card><CardContent><Skeleton className="h-80 w-full" /></CardContent></Card>
     </div>
   )
 }

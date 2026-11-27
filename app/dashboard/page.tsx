@@ -5,8 +5,9 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
+import { connection } from 'next/server'
 
-export const instant = false  // ← AJOUTE CETTE LIGNE
+// export const instant = false  // ← AJOUTE CETTE LIGNE
 
 /**
  * Shell statique (pré-rendu) + contenu dynamique (streamé).
@@ -28,6 +29,7 @@ export default function DashboardPage() {
  * Ce composant est streamé au runtime, pas pré-rendu.
  */
 async function DashboardContent() {
+  await connection() // force le rendu dynamique
   const supabase = await createClient()
   const {
     data: { user },

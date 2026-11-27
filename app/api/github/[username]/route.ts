@@ -7,7 +7,8 @@ import { calculateScore } from '@/lib/score/calculate'
 import { getCache, cacheKeys } from '@/lib/cache/redis'
 import { validateUsername } from '@/lib/validation/username'
 import { createClient } from '@/lib/supabase/server'
-import { anonymousLimiter, authenticatedLimiter, getClientIp } from '@/lib/rate-limit'
+// import { anonymousLimiter, authenticatedLimiter, getClientIp } from '@/lib/rate-limit'
+import { getAnonymousLimiter, getAuthenticatedLimiter, getClientIp } from '@/lib/rate-limit'
 import { AppError } from '@/lib/errors'
 import { config } from '@/lib/config'
 import type { ProfileData } from '@/lib/github/types'
@@ -43,7 +44,8 @@ export async function GET(
 
     // 3. Rate limiting
     const identifier = user?.id ?? getClientIp(request)
-    const limiter = user ? authenticatedLimiter : anonymousLimiter
+    // const limiter = user ? authenticatedLimiter : anonymousLimiter
+    const limiter = user ? getAuthenticatedLimiter() : getAnonymousLimiter()
     const { success, reset } = await limiter.limit(identifier)
 
     if (!success) {

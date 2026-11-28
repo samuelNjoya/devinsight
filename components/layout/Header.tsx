@@ -16,9 +16,10 @@ interface HeaderProps {
 }
 
 const NAV_ITEMS = [
+   { href: '/', label: 'Accueil' },      
   { href: '/dashboard', label: 'Dashboard' },
-  { href: '/dashboard/saved', label: 'Saved' },
-  { href: '/dashboard/compare', label: 'Compare' },
+  { href: '/dashboard/saved', label: 'Enregistrement' },
+  { href: '/dashboard/compare', label: 'Comparer' },
 ] as const
 
 export function Header({ user }: HeaderProps) {

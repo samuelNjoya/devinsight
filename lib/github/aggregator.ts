@@ -17,16 +17,18 @@ export async function aggregateProfile(
   username: string,
   options: { includePrivate: boolean }
 ): Promise<ProfileData> {
-  const [user, repos, events] = await Promise.all([
+  const [user, repos, contributions] = await Promise.all([
     client.getUser(username),
     client.getRepos(username, { includePrivate: options.includePrivate }),
-    client.getEvents(username),
+    // client.getEvents(username),
+     client.getContributionCalendar(username),  // ← remplace getEvents
   ])
 
   return {
     user,
     repos,
-    events,
+    // events,
+    contributions,  // ← remplace events
     languages: computeLanguages(repos),
     includesPrivate: options.includePrivate,
     analyzedAt: new Date().toISOString(),

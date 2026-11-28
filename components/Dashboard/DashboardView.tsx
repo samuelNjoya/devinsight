@@ -53,7 +53,8 @@ export function DashboardView({ profile, score, isAuthenticated }: DashboardView
         </FadeIn>
 
         <FadeIn delay={0.2}>
-          <ActivityHeatmap events={profile.events} />
+          {/* <ActivityHeatmap events={profile.events} /> */}
+          <ActivityHeatmap contributions={profile.contributions} />
         </FadeIn>
 
         <FadeIn delay={0.3}>

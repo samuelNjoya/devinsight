@@ -47,10 +47,21 @@ export interface GitHubEventSummary {
 export interface ProfileData {
   readonly user: GitHubUserSummary
   readonly repos: readonly GitHubRepoSummary[]
-  readonly events: readonly GitHubEventSummary[]
+  // readonly events: readonly GitHubEventSummary[]
+  readonly contributions: ContributionCalendar   // ← remplace events
   readonly languages: Readonly<Record<string, number>>
   /** true si l'analyse a utilisé un token OAuth (dépôts privés inclus) */
   readonly includesPrivate: boolean
   /** Timestamp ISO de l'analyse */
   readonly analyzedAt: string
+}
+
+export interface ContributionDay {
+  readonly date: string          // "YYYY-MM-DD"
+  readonly count: number
+}
+
+export interface ContributionCalendar {
+  readonly totalContributions: number
+  readonly days: readonly ContributionDay[]
 }

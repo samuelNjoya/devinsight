@@ -1,10 +1,11 @@
 // components/Dashboard/ActivityHeatmap.tsx
 
 import { Card, CardContent } from '@/components/ui/Card'
-import type { GitHubEventSummary } from '@/lib/github/types'
+import type { ContributionCalendar, GitHubEventSummary } from '@/lib/github/types'
 
 interface ActivityHeatmapProps {
-  events: readonly GitHubEventSummary[]
+  // events: readonly GitHubEventSummary[]
+  contributions: ContributionCalendar
 }
 
 const DAYS = 7
@@ -12,14 +13,25 @@ const WEEKS = 52
 const CELL = 12
 const GAP = 3
 
-function groupEventsByDay(events: readonly GitHubEventSummary[]): Map<string, number> {
+// function groupEventsByDay(events: readonly GitHubEventSummary[]): Map<string, number> {
+//   const map = new Map<string, number>()
+//   for (const event of events) {
+//     const day = event.createdAt.slice(0, 10)
+//     map.set(day, (map.get(day) ?? 0) + 1)
+//   }
+//   return map
+// }
+
+function groupContributionsByDay(
+  contributions: ContributionCalendar
+): Map<string, number> {
   const map = new Map<string, number>()
-  for (const event of events) {
-    const day = event.createdAt.slice(0, 10)
-    map.set(day, (map.get(day) ?? 0) + 1)
+  for (const day of contributions.days) {
+    map.set(day.date, day.count)
   }
   return map
 }
+
 
 function buildDateGrid(): string[][] {
   const today = new Date()
@@ -51,8 +63,9 @@ function intensityClass(count: number): string {
 
 const DAY_LABELS = ['Lun', '', 'Mer', '', 'Ven', '', 'Dim'] as const
 
-export function ActivityHeatmap({ events }: ActivityHeatmapProps) {
-  const counts = groupEventsByDay(events)
+export function ActivityHeatmap({ contributions }: ActivityHeatmapProps) {
+  // const counts = groupEventsByDay(events)
+   const counts = groupContributionsByDay(contributions)
   const grid = buildDateGrid()
 
   return (
@@ -63,11 +76,12 @@ export function ActivityHeatmap({ events }: ActivityHeatmapProps) {
             Activité (12 derniers mois)
           </h2>
           <span className="text-xs text-zinc-500 dark:text-zinc-400">
-            {events.length} events
+            {/* {events.length} events */}
+             {contributions.totalContributions} contributions
           </span>
         </div>
         <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-          Basée sur les events publics — peut être incomplète
+          Commits, PRs et issues — inclut les contributions privées si activées sur GitHub
         </p>
 
         <div className="mt-6 overflow-x-auto pb-2">

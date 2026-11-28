@@ -81,7 +81,7 @@ export function LanguagePie({ languages }: LanguagePieProps) {
           </div>
 
           <ul className="flex-1 space-y-2 text-sm">
-            {data.slice(0, 5).map((entry, index) => (
+            {data.slice(0, 15).map((entry, index) => (
               <li key={entry.name} className="flex items-center gap-2">
                 <span
                   className="h-2.5 w-2.5 shrink-0 rounded-full"

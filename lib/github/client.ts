@@ -2,13 +2,15 @@
 
 import { config } from '@/lib/config'
 import {
-    AppError,
+  AppError,
   GitHubAuthError,
   GitHubNotFoundError,
   GitHubRateLimitError,
   GitHubServerError,
 } from '@/lib/errors'
 import type {
+  ContributionCalendar,
+  ContributionDay,
   GitHubEventSummary,
   GitHubRepoSummary,
   GitHubUserSummary,
@@ -30,7 +32,7 @@ interface GitHubRequestOptions {
 }
 
 export class GitHubClient {
-  constructor(private readonly options: GitHubRequestOptions = {}) {}
+  constructor(private readonly options: GitHubRequestOptions = {}) { }
 
   /**
    * Fetch bas niveau avec timeout + retry + mapping d'erreurs.
@@ -136,12 +138,104 @@ export class GitHubClient {
    * Récupère les events publics récents (max 300, 90 jours).
    * Note : /events ne renvoie que les events publics, même avec un token.
    */
+  // async getEvents(username: string): Promise<readonly GitHubEventSummary[]> {
+  //   const raw = await this.request<RawGitHubEvent[]>(
+  //     `/users/${username}/events/public?per_page=100`
+  //   )
+  //   return raw.map((e) => ({ type: e.type, createdAt: e.created_at }))
+  // }
   async getEvents(username: string): Promise<readonly GitHubEventSummary[]> {
-    const raw = await this.request<RawGitHubEvent[]>(
-      `/users/${username}/events/public?per_page=100`
-    )
+    // Utiliser /events (sans /public) si un token est disponible
+    // Sinon /events/public pour les visiteurs anonymes
+    const path = this.options.token
+      ? `/users/${username}/events?per_page=100`
+      : `/users/${username}/events/public?per_page=100`
+
+    const raw = await this.request<RawGitHubEvent[]>(path)
     return raw.map((e) => ({ type: e.type, createdAt: e.created_at }))
   }
+
+
+  // lib/github/client.ts — ajouter dans la classe
+
+/**
+ * Récupère le calendrier de contributions via l'API GraphQL.
+ * Donne les vraies contributions (commits, PRs, issues) sur 12 mois,
+ * sans la limite de 90 jours de l'API REST Events.
+ * 
+ * Les contributions privées ne sont incluses que si l'utilisateur
+ * a activé "Include private contributions on my profile".
+ */
+async getContributionCalendar(
+  username: string
+): Promise<ContributionCalendar> {
+  const now = new Date()
+  const from = new Date(now)
+  from.setFullYear(now.getFullYear() - 1)
+  from.setDate(from.getDate() + 1) // il y a exactement 1 an
+
+  const query = `
+    query($username: String!, $from: DateTime!, $to: DateTime!) {
+      user(login: $username) {
+        contributionsCollection(from: $from, to: $to) {
+          contributionCalendar {
+            totalContributions
+            weeks {
+              contributionDays {
+                date
+                contributionCount
+              }
+            }
+          }
+        }
+      }
+    }
+  `
+
+  const variables = {
+    username,
+    from: from.toISOString(),
+    to: now.toISOString(),
+  }
+
+  const token = this.options.token ?? config.github.token
+  const response = await fetch('https://api.github.com/graphql', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ query, variables }),
+  })
+
+  if (!response.ok) {
+    // Réutilise la gestion d'erreurs existante
+    if (response.status === 401) throw new GitHubAuthError()
+    if (response.status === 403) throw new GitHubRateLimitError(60)
+    throw new GitHubServerError(response.status)
+  }
+
+  const json = await response.json()
+
+  if (json.errors) {
+    throw new GitHubServerError(400)
+  }
+
+  const calendar = json.data.user.contributionsCollection.contributionCalendar
+
+  // Aplatit les semaines en un tableau de jours
+  const days: ContributionDay[] = []
+  for (const week of calendar.weeks) {
+    for (const day of week.contributionDays) {
+      days.push({ date: day.date, count: day.contributionCount })
+    }
+  }
+
+  return {
+    totalContributions: calendar.totalContributions,
+    days,
+  }
+}
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -217,3 +311,4 @@ function mapRepo(raw: RawGitHubRepo): GitHubRepoSummary {
     htmlUrl: raw.html_url,
   }
 }
+
